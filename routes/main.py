@@ -144,7 +144,7 @@ def complete_profile(employee_id=None):
         if is_user:
             form_data['details_completed'] = True
             session['details_completed'] = True  #remove
-            session['employee_id'] = form_data['employee_id'] 
+            session['mongo_id'] = str(employee['_id'])
 
         employees_collection.update_one({'_id': employee['_id']}, {'$set': form_data})
 
@@ -169,21 +169,29 @@ def complete_profile(employee_id=None):
 
 @main_bp.route('/view_my_details')
 def view_my_details():
-    if session.get('role') != 'user':
-        flash('Unauthorized access.', 'danger')
-        return redirect(url_for('auth.dashboard'))
+    try:
+        if session.get('role') != 'user':
+            flash('Unauthorized access.', 'danger')
+            return redirect(url_for('auth.dashboard'))
 
-    emp_id = session.get('employee_id') or session.get('mongo_id')
-    employee = _get_employee_by_session_id(emp_id)
+        emp_id =  session.get('mongo_id')
+        employee = _get_employee_by_session_id(emp_id)
 
     #if not employee or not session.get('details_completed', False):
     #    flash("Please complete your profile.", "warning")
     #    return redirect(url_for('main.complete_profile'))
 
-    print("Session details_completed:", session.get('details_completed'))
+        print("Session details_completed:", session.get('details_completed'))
     
-    if not session.get('details_completed', False):
-        flash("Please complete your profile.", "warning")
-        return redirect(url_for('main.complete_profile'))
+        if not session.get('details_completed', False):
+            flash("Please complete your profile.", "warning")
+            return redirect(url_for('main.complete_profile'))
 
-    return render_template('employee_detail.html', employee=normalize_family(employee))
+        return render_template('employee_detail.html', employee=normalize_family(employee))
+    
+    except Exception as e:
+        import traceback
+        print("Error in view_my_details:", e)
+        traceback.print_exc()
+        flash("An internal error occurred.", "danger")
+        return redirect(url_for('auth.dashboard'))
