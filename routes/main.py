@@ -144,6 +144,7 @@ def complete_profile(employee_id=None):
         if is_user:
             form_data['details_completed'] = True
             session['details_completed'] = True  #remove
+            session['employee_id'] = form_data['employee_id'] 
 
         employees_collection.update_one({'_id': employee['_id']}, {'$set': form_data})
 
@@ -151,8 +152,6 @@ def complete_profile(employee_id=None):
             flash("Changes saved successfully.", "success")
             return redirect(url_for('admin.employee_detail', employee_id=form_data['employee_id']))
         
-        if is_user:
-           session['employee_id'] = form_data['employee_id']  # Store employee_id in session
           #  session['details_completed'] = True  # Update session to indicate that profile is completed
 
         flash("Profile submitted. You cannot edit it further. Please contact admin for any changes.", "success")
